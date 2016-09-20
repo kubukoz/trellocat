@@ -10,8 +10,14 @@ object Trello {
     **/
   case class Board(id: String, name: String, desc: String)
 
+  /**
+    * Trello card list (column).
+    **/
   case class Column(id: String, name: String, cards: List[Card])
 
+  /**
+    * Trello card.
+    **/
   case class Card(id: String, name: String)
 
 }
