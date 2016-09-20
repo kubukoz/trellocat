@@ -15,6 +15,8 @@ import scala.concurrent.{ExecutionContext, Future}
   **/
 trait TrelloService {
   def allBoards(implicit ap: AuthParams, ec: ExecutionContext): Future[List[Trello.Board]]
+
+  def columnsOnBoard(board: Trello.Board)(implicit ap: AuthParams, ec: ExecutionContext): Future[List[Trello.Column]]
 }
 
 /**
@@ -24,6 +26,9 @@ class RealTrelloService(implicit api: ApiClient, mat: Materializer) extends Trel
   override def allBoards(implicit auth: AuthParams, ec: ExecutionContext): Future[List[Trello.Board]] = {
     api[List[Trello.Board]](HttpRequest(uri = Uri(boardsUrl).withAuthQuery(Query.Empty)))
   }
+
+  override def columnsOnBoard(board: Trello.Board)(implicit ap: AuthParams, ec: ExecutionContext): Future[List[Trello.Column]] =
+    api[List[Trello.Column]](HttpRequest(uri = Uri(s"$baseUrl/boards/${board.id}/lists").withAuthQuery(Query("cards" -> "all"))))
 }
 
 object RealTrelloService {
