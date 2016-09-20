@@ -34,7 +34,6 @@ object ApiClient {
     * Simplifies adding the auth parameters to a URI's query string.
     **/
   implicit class AuthenticatedUri(uri: Uri)(implicit authParams: AuthParams) {
-    //todo TESTS
     def withAuthQuery(query: Query): Uri = uri.withQuery(Query(authParams.authQuery ++ query: _*))
   }
 
