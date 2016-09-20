@@ -8,4 +8,6 @@ import spray.json.DefaultJsonProtocol
   **/
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val trelloBoardFormat = jsonFormat3(Trello.Board.apply)
+  implicit val trelloCardFormat = jsonFormat2(Trello.Card.apply)
+  implicit val trelloColumnFormat = jsonFormat3(Trello.Column.apply)
 }

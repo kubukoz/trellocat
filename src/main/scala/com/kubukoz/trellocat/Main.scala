@@ -27,10 +27,10 @@ object Main {
 
   implicit val authParams = AuthParams(Query("key" -> trelloConfig.apiKey, "token" -> trelloConfig.apiToken))
 
-  val service: TrelloService = new RealTrelloService()
+  val trelloService: TrelloService = new RealTrelloService()
 
   def main(args: Array[String]): Unit = {
-    val futureBoards: Future[List[Board]] = service.allBoards
+    val futureBoards: Future[List[Board]] = trelloService.allBoards
 
     futureBoards foreach println
   }
