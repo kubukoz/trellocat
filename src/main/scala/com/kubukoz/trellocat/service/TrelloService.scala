@@ -14,14 +14,14 @@ import scala.concurrent.{ExecutionContext, Future}
   * Accesses the Trello API.
   **/
 trait TrelloService {
-  def allBoards(implicit ap: AuthParams): Future[List[Trello.Board]]
+  def allBoards(implicit ap: AuthParams, ec: ExecutionContext): Future[List[Trello.Board]]
 }
 
 /**
   * Implements [[TrelloService]] with a HTTP client.
   **/
-class RealTrelloService(implicit api: ApiClient, mat: Materializer, ec: ExecutionContext) extends TrelloService with JsonSupport {
-  override def allBoards(implicit auth: AuthParams): Future[List[Trello.Board]] = {
+class RealTrelloService(implicit api: ApiClient, mat: Materializer) extends TrelloService with JsonSupport {
+  override def allBoards(implicit auth: AuthParams, ec: ExecutionContext): Future[List[Trello.Board]] = {
     api[List[Trello.Board]](HttpRequest(uri = Uri(boardsUrl).withAuthQuery(Query.Empty)))
   }
 }
