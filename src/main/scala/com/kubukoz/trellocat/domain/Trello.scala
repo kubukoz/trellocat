@@ -8,7 +8,7 @@ object Trello {
   /**
     * Trello's board representation.
     **/
-  case class Board(id: String, name: String, desc: String)
+  case class Board(id: String, name: String)
 
   /**
     * Trello card list (column).
