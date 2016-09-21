@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Directives
 import akka.stream.ActorMaterializer
 import com.kubukoz.trellocat.api.RealApiClient
 import com.kubukoz.trellocat.domain.{AuthParams, JsonSupport}
-import com.kubukoz.trellocat.service.TrelloService
+import com.kubukoz.trellocat.service.{GithubService, TrelloService}
 import com.typesafe.config.ConfigFactory
 import configs.Configs
 import spray.json.pimpAny
@@ -28,11 +28,18 @@ trait Routes extends Directives with JsonSupport {
   implicit val authParams = AuthParams(Query("key" -> trelloConfig.apiKey, "token" -> trelloConfig.apiToken))
 
   val trelloService: TrelloService
+  val githubService: GithubService
 
   val routes = path("boards") {
     get {
       complete {
         trelloService.allBoards.map(_.toJson)
+      }
+    }
+  } ~ path("transfer" / Remaining) { trelloBoardId =>
+    post {
+      complete {
+        s"STUB! $trelloBoardId"
       }
     }
   }

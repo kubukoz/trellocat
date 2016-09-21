@@ -15,21 +15,25 @@ import scala.concurrent.{ExecutionContext, Future}
   * Accesses the Trello API.
   **/
 trait TrelloService {
-  def allBoards(implicit ap: AuthParams, ec: ExecutionContext): Future[List[Trello.Board]]
+  def allBoards(implicit ec: ExecutionContext): Future[List[Trello.Board]]
 
-  def columnsOnBoard(board: Trello.Board)(implicit ap: AuthParams, ec: ExecutionContext): Future[List[Trello.Column]]
+  def columnsOnBoard(boardId: String)(implicit ec: ExecutionContext): Future[List[Trello.Column]]
+
+  def boardById(boardId: String)(implicit ec: ExecutionContext): Future[Trello.Board]
 }
 
 /**
   * Implements [[TrelloService]] with a HTTP client.
   **/
-class RealTrelloService(implicit api: ApiClient, mat: Materializer) extends TrelloService with JsonSupport {
-  override def allBoards(implicit auth: AuthParams, ec: ExecutionContext): Future[List[Trello.Board]] = {
+class RealTrelloService(implicit api: ApiClient, ap: AuthParams, mat: Materializer) extends TrelloService with JsonSupport {
+  override def allBoards(implicit ec: ExecutionContext): Future[List[Trello.Board]] =
     api[List[Trello.Board]](HttpRequest(uri = Uri(boardsUrl).withAuthQuery(Query.Empty)))
-  }
 
-  override def columnsOnBoard(board: Trello.Board)(implicit ap: AuthParams, ec: ExecutionContext): Future[List[Trello.Column]] =
-    api[List[Trello.Column]](HttpRequest(uri = Uri(s"$baseUrl/boards/${board.id}/lists").withAuthQuery(Query("cards" -> "all"))))
+  override def columnsOnBoard(boardId: String)(implicit ec: ExecutionContext): Future[List[Trello.Column]] =
+    api[List[Trello.Column]](HttpRequest(uri = Uri(s"$baseUrl/boards/$boardId/lists").withAuthQuery(Query("cards" -> "all"))))
+
+  override def boardById(boardId: String)(implicit ec: ExecutionContext): Future[Trello.Board] =
+    api[Trello.Board](HttpRequest(uri = Uri(s"$baseUrl/boards/$boardId").withAuthQuery(Query.Empty)))
 }
 
 object RealTrelloService {
@@ -38,9 +42,12 @@ object RealTrelloService {
 }
 
 trait MockTrelloService extends TrelloService {
-  override def allBoards(implicit ap: AuthParams, ec: ExecutionContext): Future[List[Board]] =
+  override def allBoards(implicit ec: ExecutionContext): Future[List[Board]] =
     Future.failed(new Exception("Stub!"))
 
-  override def columnsOnBoard(board: Board)(implicit ap: AuthParams, ec: ExecutionContext): Future[List[Column]] =
+  override def columnsOnBoard(boardId: String)(implicit ec: ExecutionContext): Future[List[Column]] =
+    Future.failed(new Exception("Stub!"))
+
+  override def boardById(boardId: String)(implicit ec: ExecutionContext): Future[Board] =
     Future.failed(new Exception("Stub!"))
 }
