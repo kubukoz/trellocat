@@ -5,6 +5,7 @@ import akka.http.scaladsl.model.{HttpRequest, Uri}
 import akka.stream.Materializer
 import com.kubukoz.trellocat.api.ApiClient
 import com.kubukoz.trellocat.api.ApiClient.AuthenticatedUri
+import com.kubukoz.trellocat.domain.Trello.{Board, Column}
 import com.kubukoz.trellocat.domain.{AuthParams, JsonSupport, Trello}
 import com.kubukoz.trellocat.service.RealTrelloService._
 
@@ -34,4 +35,12 @@ class RealTrelloService(implicit api: ApiClient, mat: Materializer) extends Trel
 object RealTrelloService {
   val baseUrl = "https://api.trello.com/1/"
   val boardsUrl = s"$baseUrl/members/me/boards"
+}
+
+trait MockTrelloService extends TrelloService {
+  override def allBoards(implicit ap: AuthParams, ec: ExecutionContext): Future[List[Board]] =
+    Future.failed(new Exception("Stub!"))
+
+  override def columnsOnBoard(board: Board)(implicit ap: AuthParams, ec: ExecutionContext): Future[List[Column]] =
+    Future.failed(new Exception("Stub!"))
 }
