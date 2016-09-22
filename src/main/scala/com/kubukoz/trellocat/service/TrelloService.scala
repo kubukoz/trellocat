@@ -25,7 +25,8 @@ trait TrelloService {
 /**
   * Implements [[TrelloService]] with a HTTP client.
   **/
-class RealTrelloService(implicit api: ApiClient, ap: AuthParams, mat: Materializer) extends TrelloService with JsonSupport {
+class RealTrelloService(ap: AuthParams)(implicit api: ApiClient, mat: Materializer) extends TrelloService with JsonSupport {
+  implicit val app = ap
   override def allBoards(implicit ec: ExecutionContext): Future[List[Trello.Board]] =
     api[List[Trello.Board]](HttpRequest(uri = Uri(boardsUrl).withAuthQuery(Query.Empty)))
 
@@ -37,7 +38,7 @@ class RealTrelloService(implicit api: ApiClient, ap: AuthParams, mat: Materializ
 }
 
 object RealTrelloService {
-  val baseUrl = "https://api.trello.com/1/"
+  val baseUrl = "https://api.trello.com/1"
   val boardsUrl = s"$baseUrl/members/me/boards"
 }
 

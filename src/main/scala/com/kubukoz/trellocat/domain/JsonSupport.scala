@@ -10,4 +10,8 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val trelloBoardFormat = jsonFormat2(Trello.Board.apply)
   implicit val trelloCardFormat = jsonFormat2(Trello.Card.apply)
   implicit val trelloColumnFormat = jsonFormat3(Trello.Column.apply)
+
+  implicit val githubProjectStubFormat = jsonFormat1(Github.ProjectStub.apply)
+  implicit val githubProjectFormat = jsonFormat2(Github.Project.apply)
+  implicit val githubUserFormat = jsonFormat1(Github.User.apply)
 }
