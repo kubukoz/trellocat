@@ -13,11 +13,15 @@ object Trello {
   /**
     * Trello card list (column).
     **/
-  case class Column(id: String, name: String, cards: List[Card])
+  case class Column(id: String, name: String, cards: List[Card]) {
+    def toGithub: Github.Column = Github.Column(id, name, cards.map(_.toGithub))
+  }
 
   /**
     * Trello card.
     **/
-  case class Card(id: String, name: String)
+  case class Card(id: String, name: String) {
+    def toGithub: Github.Card = Github.Card(id, name)
+  }
 
 }
