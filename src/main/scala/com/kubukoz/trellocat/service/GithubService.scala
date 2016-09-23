@@ -10,7 +10,6 @@ import com.kubukoz.trellocat.api.ApiClient.AuthenticatedUri
 import com.kubukoz.trellocat.domain.Github.{Column, Project, ProjectStub, User}
 import com.kubukoz.trellocat.domain.{AuthParams, Github, JsonSupport}
 import com.kubukoz.trellocat.service.RealGithubService._
-import spray.json.JsNumber
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -20,8 +19,14 @@ import scala.concurrent.{ExecutionContext, Future}
 trait GithubService {
   def createColumn(projectId: Long, column: Column)(implicit ec: ExecutionContext): Future[Unit]
 
+  /**
+    * Creates a project with the given name in the given repo, owned by the current user.
+    **/
   def createProject(repoName: String, projectName: String)(implicit ec: ExecutionContext): Future[Github.Project]
 
+  /**
+    * Returns information about the current user.
+    **/
   def getUser()(implicit ec: ExecutionContext): Future[Github.User]
 }
 

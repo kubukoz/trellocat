@@ -11,4 +11,5 @@ object Github {
   case class Card(id: String, name: String)
 
   case class User(login: String)
+
 }

@@ -25,7 +25,7 @@ object Main extends Routes {
 
     githubService.createProject("trellocat", "testtest").map { proj =>
       println(s"created $proj")
-    }.recover{
+    }.recover {
       case thr => thr.printStackTrace()
     }
     io.StdIn.readLine("Press enter to stop")

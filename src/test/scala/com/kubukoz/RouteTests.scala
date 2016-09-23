@@ -1,13 +1,18 @@
 package com.kubukoz
 
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.http.scaladsl.model.{ContentType, HttpEntity}
+import akka.http.scaladsl.server.RouteResult.Complete
+import akka.stream.ThrottleMode
+import akka.stream.scaladsl.Source
+import akka.util.ByteString
 import com.kubukoz.trellocat.Routes
 import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
 import com.kubukoz.trellocat.service.{GithubService, MockGithubService, MockTrelloService, TrelloService}
 
+import scala.concurrent.duration.DurationLong
 import scala.concurrent.{ExecutionContext, Future}
 
-class RouteTests extends BaseSpec with ScalatestRouteTest with JsonSupport {
+class RouteTests extends BaseSpec with JsonSupport {
   "/boards" should "return a list of boards" in {
     val mockTrelloService = new MockTrelloService {
       override def allBoards(implicit ec: ExecutionContext): Future[List[Trello.Board]] =
@@ -22,6 +27,8 @@ class RouteTests extends BaseSpec with ScalatestRouteTest with JsonSupport {
       override val githubService: GithubService = new MockGithubService {}
     }
 
+
+    routes.routes.map(_.entity.dataBytes.take(10))
     Get("/boards") ~> routes.routes ~> check {
       responseAs[List[Trello.Board]] shouldBe List(
         Trello.Board("12345-12345", "First board"),

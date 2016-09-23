@@ -15,16 +15,16 @@ import scala.concurrent.{ExecutionContext, Future}
   * Provides a single method that takes a request and returns a future of chosen type.
   **/
 trait ApiClient {
-  def apply[T](request: HttpRequest)
-              (implicit unmarshaller: FromResponseUnmarshaller[T], mat: Materializer, ec: ExecutionContext): Future[T]
+  def apply[T: FromResponseUnmarshaller](request: HttpRequest)
+                                        (implicit mat: Materializer, ec: ExecutionContext): Future[T]
 }
 
 /**
   * Implements [[ApiClient]] in terms of `Http()`
   **/
 class RealApiClient(implicit http: HttpExt) extends ApiClient {
-  override def apply[T](request: HttpRequest)
-                       (implicit unmarshaller: FromResponseUnmarshaller[T], mat: Materializer, ec: ExecutionContext): Future[T] =
+  override def apply[T: FromResponseUnmarshaller](request: HttpRequest)
+                                                 (implicit mat: Materializer, ec: ExecutionContext): Future[T] =
     http.singleRequest(request).flatMap(Unmarshal(_).to[T])
 }
 
