@@ -17,7 +17,7 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
     val repoName = "some-repo"
     val userName = "some-user"
 
-    implicit val ap = AuthParams(Query("access_token" -> "some-token"))
+    val ap = AuthParams(Query("access_token" -> "some-token"))
 
     val githubApiRoutes = {
       import Directives._
@@ -29,11 +29,14 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
               complete(Github.User(userName))
           }
         }
-      } ~ path("repos" / "some-user" / "some-repo" / "projects") {
+      } ~ path("repos" / userName / repoName / "projects") {
         post {
-          entity(as[ProjectStub]) {
-            case ProjectStub(`boardName`) =>
-              complete(Github.Project(projectId, boardName))
+          parameter("access_token") {
+            case "some-token" =>
+              entity(as[ProjectStub]) {
+                case ProjectStub(`boardName`) =>
+                  complete(Github.Project(projectId, boardName))
+              }
           }
         }
       }
@@ -45,5 +48,39 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     implicit val timeout = Timeout(1.second)
     ghService.createProject(repoName, boardName).futureValue shouldBe Github.Project(projectId, boardName)
+  }
+
+  it should "handle trying to create a project in a nonexistent repo" in {
+    val boardName = "Project 2"
+    val repoName = "nope-nope"
+    val userName = "some-user"
+
+    implicit val ap = AuthParams(Query("access_token" -> "token"))
+
+    val githubApiRoutes = {
+      import Directives._
+
+      path("user") {
+        get {
+          parameter("access_token") {
+            case "token" => complete(Github.User(userName))
+          }
+        }
+      } ~ path("repos" / userName / repoName / "projects") {
+        post {
+          parameter("access_token") {
+            case "token" => reject
+          }
+        }
+      }
+    }
+
+    implicit val client = new MockApiClient(githubApiRoutes)
+
+    val ghService = new RealGithubService(ap)
+
+    implicit val timeout = Timeout(1.second)
+
+    ghService.createProject(repoName, boardName).failed.futureValue.getMessage shouldBe "Request was rejected"
   }
 }
