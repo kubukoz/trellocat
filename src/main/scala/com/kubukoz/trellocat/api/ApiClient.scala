@@ -16,15 +16,15 @@ import scala.concurrent.{ExecutionContext, Future}
   **/
 trait ApiClient {
   def apply[T: FromResponseUnmarshaller](request: HttpRequest)
-                                        (implicit mat: Materializer, ec: ExecutionContext): Future[T]
+                                        (implicit ec: ExecutionContext): Future[T]
 }
 
 /**
   * Implements [[ApiClient]] in terms of `Http()`
   **/
-class RealApiClient(implicit http: HttpExt) extends ApiClient {
+class RealApiClient(implicit http: HttpExt, materializer: Materializer) extends ApiClient {
   override def apply[T: FromResponseUnmarshaller](request: HttpRequest)
-                                                 (implicit mat: Materializer, ec: ExecutionContext): Future[T] =
+                                                 (implicit ec: ExecutionContext): Future[T] =
     http.singleRequest(request).flatMap(Unmarshal(_).to[T])
 }
 

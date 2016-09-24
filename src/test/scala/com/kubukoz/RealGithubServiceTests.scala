@@ -2,7 +2,6 @@ package com.kubukoz
 
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.server.Directives
-import akka.stream.Materializer
 import com.kubukoz.trellocat.domain.Github.ProjectStub
 import com.kubukoz.trellocat.domain.{AuthParams, Github, JsonSupport}
 import com.kubukoz.trellocat.service.RealGithubService
@@ -19,7 +18,6 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
     val userName = "some-user"
 
     implicit val ap = AuthParams(Query("access_token" -> "some-token"))
-    implicit val mat: Materializer = null
 
     val githubApiRoutes = {
       import Directives._
