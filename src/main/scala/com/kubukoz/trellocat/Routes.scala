@@ -35,7 +35,7 @@ trait Routes extends Directives with JsonSupport {
     parameters('from, 'to) { (trelloBoardId, repoName) =>
       post {
         complete {
-          transferBoardWithId(trelloBoardId, repoName).map(_.id.toString)
+          transferBoardWithId(trelloBoardId, repoName)
         }
       }
     }
