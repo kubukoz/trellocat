@@ -1,7 +1,7 @@
 package com.kubukoz
 
 import com.kubukoz.trellocat.Routes
-import com.kubukoz.trellocat.domain.Github.User
+import com.kubukoz.trellocat.domain.Github.{Column, User}
 import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
 import com.kubukoz.trellocat.service._
 
@@ -47,11 +47,11 @@ class RouteTests extends BaseSpec with JsonSupport {
 
       override def columnsOnBoard(boardId: String)(implicit ec: ExecutionContext): Future[List[Trello.Column]] = boardId match {
         case `transferredBoardId` => Future.successful(List(
-          Trello.Column("column-1", "Column 1", List(
+          Trello.Column("Column 1", List(
             Trello.Card("card-1", "Card 1"),
             Trello.Card("card-2", "Card 2")
           )),
-          Trello.Column("column-2", "Column 2", List(
+          Trello.Column("Column 2", List(
             Trello.Card("card-3", "Card 3"),
             Trello.Card("card-4", "Card 4")
           ))
@@ -68,9 +68,9 @@ class RouteTests extends BaseSpec with JsonSupport {
           )
         }
 
-      override def createColumn(projectId: Long, column: Github.Column)
-                               (implicit ec: ExecutionContext): Future[Unit] = projectId match {
-        case `expectedProjectId` => Future.successful(())
+      override def createColumn(user: User, projectNumber: Int, repoName: String, column: Github.Column)
+                               (implicit ec: ExecutionContext): Future[Column] = projectNumber match {
+        case 1 => Future.successful(column)
       }
 
       override def getUser()(implicit ec: ExecutionContext): Future[User] = Future.successful(user)

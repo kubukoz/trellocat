@@ -1,6 +1,10 @@
 package com.kubukoz.trellocat
 
+import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri.Query
+import akka.stream.ActorMaterializer
+import com.kubukoz.trellocat.api.RealApiClient
 import com.kubukoz.trellocat.config.{GithubConfig, TrelloConfig}
 import com.kubukoz.trellocat.domain.AuthParams
 import com.kubukoz.trellocat.service.{GithubService, RealGithubService, RealTrelloService, TrelloService}
@@ -10,6 +14,12 @@ import configs.Configs
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main extends Routes {
+  implicit val system = ActorSystem("trellocat")
+  implicit val materializer = ActorMaterializer()
+
+  implicit val http = Http()
+  implicit val api = new RealApiClient
+
   val config = ConfigFactory.load()
   val trelloConfig = Configs[TrelloConfig].get(config, "trello").value
   val githubConfig = Configs[GithubConfig].get(config, "github").value

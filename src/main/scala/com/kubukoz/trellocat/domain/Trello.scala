@@ -13,8 +13,8 @@ object Trello {
   /**
     * Trello card list (column).
     **/
-  case class Column(id: String, name: String, cards: List[Card]) {
-    def toGithub: Github.Column = Github.Column(id, name, cards.map(_.toGithub))
+  case class Column(name: String, cards: List[Card]) {
+    def toGithub: Github.Column = Github.Column(name)
   }
 
   /**

@@ -1,26 +1,14 @@
 package com.kubukoz.trellocat
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
 import akka.http.scaladsl.server._
-import akka.stream.ActorMaterializer
-import com.kubukoz.trellocat.api.RealApiClient
-import com.kubukoz.trellocat.domain.Github.Project
-import com.kubukoz.trellocat.domain.Trello.Column
-import com.kubukoz.trellocat.domain.{Github, JsonSupport}
+import com.kubukoz.trellocat.domain.Github.{Project, User}
+import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
 import com.kubukoz.trellocat.service.{GithubService, TrelloService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait Routes extends Directives with JsonSupport {
-
-  implicit val system = ActorSystem("trellocat")
-  implicit val materializer = ActorMaterializer()
-
-  implicit val http = Http()
-  implicit val api = new RealApiClient
-
   val trelloService: TrelloService
   val githubService: GithubService
 
@@ -48,16 +36,16 @@ trait Routes extends Directives with JsonSupport {
       columns <- trelloService.columnsOnBoard(boardId)
       user <- userF
       project <- githubService.createProject(user, repoName, board.name)
-      _ <- transferColumns(columns, project)
+      _ <- transferColumns(columns, project, user, repoName)
     } yield project
   }
 
-  def transferColumns(columns: List[Column],
-                      project: Github.Project): Future[List[Unit]] = {
+  def transferColumns(columns: List[Trello.Column], project: Github.Project,
+                      user: User, repoName: String): Future[List[Github.Column]] = {
     Future.sequence {
       columns
         .map(_.toGithub)
-        .map(githubService.createColumn(project.id, _))
+        .map(githubService.createColumn(user, project.number, repoName, _))
     }
   }
 }

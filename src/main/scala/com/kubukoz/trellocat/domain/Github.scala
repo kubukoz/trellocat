@@ -18,7 +18,7 @@ object Github {
   /**
     * A list of cards.
     **/
-  case class Column(id: String, name: String, cards: List[Card])
+  case class Column(name: String)
 
   /**
     * A GitHub Project card
