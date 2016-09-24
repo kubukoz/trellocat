@@ -17,6 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * Accesses the GitHub API.
   **/
 trait GithubService {
+  //todo doc
   def createColumn(projectId: Long, column: Column)(implicit ec: ExecutionContext): Future[Unit]
 
   /**
@@ -73,13 +74,11 @@ object RealGithubService {
   def projectsUrl(userName: String, repoName: String): String = s"$baseUrl/repos/$userName/$repoName/projects"
 }
 
+//noinspection NotImplementedCode
 class MockGithubService extends GithubService {
-  override def createColumn(projectId: Long, column: Column)(implicit ec: ExecutionContext): Future[Unit] =
-    Future.failed(new Exception("Stub!"))
+  override def createColumn(projectId: Long, column: Column)(implicit ec: ExecutionContext): Future[Unit] = ???
 
-  override def createProject(repoName: String, projectName: String)(implicit ec: ExecutionContext): Future[Project] =
-    Future.failed(new Exception("Stub!"))
+  override def createProject(repoName: String, projectName: String)(implicit ec: ExecutionContext): Future[Project] = ???
 
-  override def getUser()(implicit ec: ExecutionContext): Future[User] =
-    Future.failed(new Exception("Stub!"))
+  override def getUser()(implicit ec: ExecutionContext): Future[User] = ???
 }
