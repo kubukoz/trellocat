@@ -1,8 +1,9 @@
 package com.kubukoz
 
 import com.kubukoz.trellocat.Routes
+import com.kubukoz.trellocat.domain.Github.User
 import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
-import com.kubukoz.trellocat.service.{GithubService, MockGithubService, MockTrelloService, TrelloService}
+import com.kubukoz.trellocat.service._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,6 +36,7 @@ class RouteTests extends BaseSpec with JsonSupport {
 
     val repoName = "my-repo"
     val expectedProjectId = 100
+    val user = User("user-name")
 
     val mockTrelloService = new MockTrelloService {
       override def boardById(boardId: String)(implicit ec: ExecutionContext): Future[Trello.Board] = boardId match {
@@ -58,11 +60,11 @@ class RouteTests extends BaseSpec with JsonSupport {
     }
 
     val mockGithubService = new MockGithubService {
-      override def createProject(repoName: String, projectName: String)
+      override def createProject(rUser: User, rRepoName: String, projectName: String)
                                 (implicit ec: ExecutionContext): Future[Github.Project] =
-        (repoName, projectName) match {
-          case (`repoName`, `transferredBoardName`) => Future.successful(
-            Github.Project(expectedProjectId, transferredBoardName)
+        (rUser, rRepoName, projectName) match {
+          case (`user`, `repoName`, `transferredBoardName`) => Future.successful(
+            Github.Project(expectedProjectId, transferredBoardName, 1)
           )
         }
 
@@ -70,6 +72,8 @@ class RouteTests extends BaseSpec with JsonSupport {
                                (implicit ec: ExecutionContext): Future[Unit] = projectId match {
         case `expectedProjectId` => Future.successful(())
       }
+
+      override def getUser()(implicit ec: ExecutionContext): Future[User] = Future.successful(user)
     }
 
     val router = new Routes {
@@ -78,7 +82,7 @@ class RouteTests extends BaseSpec with JsonSupport {
     }
 
     Post(s"/transfer?from=$transferredBoardId&to=$repoName") ~> router.routes ~> check {
-      responseAs[Github.Project] shouldBe Github.Project(expectedProjectId, transferredBoardName)
+      responseAs[Github.Project] shouldBe Github.Project(expectedProjectId, transferredBoardName, 1)
     }
   }
 }

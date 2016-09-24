@@ -13,7 +13,7 @@ object Github {
   /**
     * A project in a repo.
     **/
-  case class Project(id: Int, name: String)
+  case class Project(id: Int, name: String, number: Int)
 
   /**
     * A list of cards.
