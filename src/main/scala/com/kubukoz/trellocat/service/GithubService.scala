@@ -68,7 +68,7 @@ object RealGithubService {
   val baseUrl = "https://api.github.com"
   val userUrl = s"$baseUrl/user"
 
-  val acceptInertia = Accept.parseFromValueString("application/vnd.github.inertia-preview+json").right.get
+  val acceptInertia = Accept.parseFromValueString("application/vnd.github.inertia-preview+json, application/json").right.get
 
   def projectsUrl(userName: String, repoName: String): String = s"$baseUrl/repos/$userName/$repoName/projects"
 }

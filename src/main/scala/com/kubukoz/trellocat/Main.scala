@@ -23,11 +23,6 @@ object Main extends Routes {
   def main(args: Array[String]): Unit = {
     val server = http.bindAndHandle(routes, "localhost", 8080)
 
-    githubService.createProject("trellocat", "testtest").map { proj =>
-      println(s"created $proj")
-    }.recover {
-      case thr => thr.printStackTrace()
-    }
     io.StdIn.readLine("Press enter to stop")
     server.flatMap(_.unbind()).foreach(_ => system.terminate())
   }
