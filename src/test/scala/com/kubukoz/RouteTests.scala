@@ -1,13 +1,13 @@
 package com.kubukoz
 
-import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.kubukoz.trellocat.Routes
+import com.kubukoz.trellocat.domain.Github.User
 import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
-import com.kubukoz.trellocat.service.{GithubService, MockGithubService, MockTrelloService, TrelloService}
+import com.kubukoz.trellocat.service._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class RouteTests extends BaseSpec with ScalatestRouteTest with JsonSupport {
+class RouteTests extends BaseSpec with JsonSupport {
   "/boards" should "return a list of boards" in {
     val mockTrelloService = new MockTrelloService {
       override def allBoards(implicit ec: ExecutionContext): Future[List[Trello.Board]] =
@@ -33,7 +33,10 @@ class RouteTests extends BaseSpec with ScalatestRouteTest with JsonSupport {
   "/transfer" should "transfer a board to github" in {
     val transferredBoardId = "BOARD-ID"
     val transferredBoardName = "Transferred board 1"
-    val myRepoId = "my-repo"
+
+    val repoName = "my-repo"
+    val expectedProjectId = 100
+    val user = User("user-name")
 
     val mockTrelloService = new MockTrelloService {
       override def boardById(boardId: String)(implicit ec: ExecutionContext): Future[Trello.Board] = boardId match {
@@ -57,15 +60,20 @@ class RouteTests extends BaseSpec with ScalatestRouteTest with JsonSupport {
     }
 
     val mockGithubService = new MockGithubService {
-      override def createProject(repoId: String, projectName: String): Future[Github.Project] = (repoId, projectName) match {
-        case (`myRepoId`, `transferredBoardName`) => Future.successful(
-          Github.Project("PROJECT-ID", transferredBoardName)
-        )
+      override def createProject(rUser: User, rRepoName: String, projectName: String)
+                                (implicit ec: ExecutionContext): Future[Github.Project] =
+        (rUser, rRepoName, projectName) match {
+          case (`user`, `repoName`, `transferredBoardName`) => Future.successful(
+            Github.Project(expectedProjectId, transferredBoardName, 1)
+          )
+        }
+
+      override def createColumn(projectId: Long, column: Github.Column)
+                               (implicit ec: ExecutionContext): Future[Unit] = projectId match {
+        case `expectedProjectId` => Future.successful(())
       }
 
-      override def createColumn(projectId: String, column: Github.Column): Future[Unit] = projectId match {
-        case "PROJECT-ID" => Future.successful(())
-      }
+      override def getUser()(implicit ec: ExecutionContext): Future[User] = Future.successful(user)
     }
 
     val router = new Routes {
@@ -73,8 +81,8 @@ class RouteTests extends BaseSpec with ScalatestRouteTest with JsonSupport {
       override val githubService: GithubService = mockGithubService
     }
 
-    Post(s"/transfer?from=$transferredBoardId&to=$myRepoId") ~> router.routes ~> check {
-      responseAs[String] shouldBe "PROJECT-ID"
+    Post(s"/transfer?from=$transferredBoardId&to=$repoName") ~> router.routes ~> check {
+      responseAs[Github.Project] shouldBe Github.Project(expectedProjectId, transferredBoardName, 1)
     }
   }
 }
