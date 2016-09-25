@@ -1,26 +1,14 @@
 package com.kubukoz.trellocat
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
 import akka.http.scaladsl.server._
-import akka.stream.ActorMaterializer
-import com.kubukoz.trellocat.api.RealApiClient
-import com.kubukoz.trellocat.domain.Github.Project
-import com.kubukoz.trellocat.domain.Trello.Column
-import com.kubukoz.trellocat.domain.{Github, JsonSupport}
+import com.kubukoz.trellocat.domain.Github.{Card, Project, ProjectStub, User}
+import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
 import com.kubukoz.trellocat.service.{GithubService, TrelloService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait Routes extends Directives with JsonSupport {
-
-  implicit val system = ActorSystem("trellocat")
-  implicit val materializer = ActorMaterializer()
-
-  implicit val http = Http()
-  implicit val api = new RealApiClient
-
   val trelloService: TrelloService
   val githubService: GithubService
 
@@ -47,17 +35,29 @@ trait Routes extends Directives with JsonSupport {
       board <- trelloService.boardById(boardId)
       columns <- trelloService.columnsOnBoard(boardId)
       user <- userF
-      project <- githubService.createProject(user, repoName, board.name)
-      _ <- transferColumns(columns, project)
+      project <- githubService.createProject(user, repoName, board.toGithubStub)
+      transferService = new TransferService(user, repoName, project)(githubService)
+      _ <- transferService.transferColumns(columns)
     } yield project
   }
+}
 
-  def transferColumns(columns: List[Column],
-                      project: Github.Project): Future[List[Unit]] = {
+class TransferService(user: User, repoName: String, project: Github.Project)
+                     (githubService: GithubService) {
+
+  def transferColumns(columns: List[Trello.Column]): Future[List[Github.Card]] =
     Future.sequence {
-      columns
-        .map(_.toGithub)
-        .map(githubService.createColumn(project.id, _))
+      columns.map { trelloColumn =>
+        githubService.createColumn(user, project.number, repoName, trelloColumn.toGithubStub).flatMap {
+          transferCards(trelloColumn.cards, _)
+        }
+      }
+    }.map(_.flatten)
+
+  def transferCards(cards: List[Trello.Card], ghColumn: Github.Column): Future[List[Card]] =
+    Future.sequence {
+      cards.map { trelloCard =>
+        githubService.createCard(user, project, repoName, ghColumn, trelloCard.toGithubStub)
+      }
     }
-  }
 }

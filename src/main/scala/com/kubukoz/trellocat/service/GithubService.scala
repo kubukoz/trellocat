@@ -1,14 +1,14 @@
 package com.kubukoz.trellocat.service
 
-import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model.Uri.Query
-import akka.http.scaladsl.model.{HttpMethods, HttpRequest, RequestEntity, Uri}
+import akka.http.scaladsl.model.{HttpMethods, HttpRequest, Uri}
 import akka.stream.Materializer
 import com.kubukoz.trellocat.api.ApiClient
 import com.kubukoz.trellocat.api.ApiClient.AuthenticatedUri
 import com.kubukoz.trellocat.config.GithubConstants
-import com.kubukoz.trellocat.domain.Github.{Column, Project, ProjectStub, User}
+import com.kubukoz.trellocat.domain.Github._
 import com.kubukoz.trellocat.domain.{AuthParams, Github, JsonSupport}
+import com.kubukoz.trellocat.util.AkkaHttpUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -17,12 +17,18 @@ import scala.concurrent.{ExecutionContext, Future}
   **/
 trait GithubService {
   //todo doc
-  def createColumn(projectId: Long, column: Column)(implicit ec: ExecutionContext): Future[Unit]
+  def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)
+                (implicit ec: ExecutionContext): Future[Card]
+
+  /**
+    * Creates a column within a project.
+    **/
+  def createColumn(user: User, projectNumber: Int, repoName: String, columnStub: ColumnStub)(implicit ec: ExecutionContext): Future[Column]
 
   /**
     * Creates a project with the given name in the given repo, owned by the current user.
     **/
-  def createProject(user: User, repoName: String, projectName: String)(implicit ec: ExecutionContext): Future[Github.Project]
+  def createProject(user: User, repoName: String, projectStub: ProjectStub)(implicit ec: ExecutionContext): Future[Github.Project]
 
   /**
     * Returns information about the current user.
@@ -34,29 +40,27 @@ trait GithubService {
   * Implements [[GithubService]] with a HTTP client.
   **/
 class RealGithubService(ap: AuthParams)(implicit api: ApiClient, mat: Materializer)
-  extends GithubService with JsonSupport with GithubConstants {
+  extends GithubService with JsonSupport with GithubConstants with AkkaHttpUtils {
 
   implicit val app = ap
 
-  /**
-    * Creates a project with the given name in the given repo, owned by the current user.
-    **/
-  override def createProject(user: User, repoName: String, projectName: String)(implicit ec: ExecutionContext): Future[Project] = {
+  override def createProject(user: User, repoName: String, projectStub: ProjectStub)(implicit ec: ExecutionContext): Future[Project] = {
     for {
-      entity <- Marshal(ProjectStub(projectName)).to[RequestEntity]
-      project <- api[Project](projectRequest(user, repoName).withEntity(entity))
+      entity <- toEntity(projectStub)
+      project <- api[Project](inertiaRequest(projectsUrl(user, repoName)).withEntity(entity))
     } yield project
   }
 
-  def projectsUrl(user: User, repoName: String): String = s"$baseUrl/repos/${user.login}/$repoName/projects"
+  override def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)
+                         (implicit ec: ExecutionContext): Future[Card] = ???
 
-  def projectRequest(user: User, repoName: String) = HttpRequest(
-    method = HttpMethods.POST,
-    uri = Uri(projectsUrl(user, repoName)).withAuthQuery(Query.Empty),
-    headers = List(acceptInertia)
-  )
-
-  override def createColumn(projectId: Long, column: Column)(implicit ec: ExecutionContext): Future[Unit] = ???
+  override def createColumn(user: User, projectNumber: Int, repoName: String, columnStub: ColumnStub)
+                           (implicit ec: ExecutionContext): Future[Column] =
+    for {
+      entity <- toEntity(columnStub)
+      uri = columnsUri(user, repoName, projectNumber)
+      column <- api[Column](inertiaRequest(uri).withEntity(entity))
+    } yield column
 
   override def getUser()(implicit ec: ExecutionContext): Future[User] = api[User] {
     HttpRequest(
@@ -64,14 +68,28 @@ class RealGithubService(ap: AuthParams)(implicit api: ApiClient, mat: Materializ
       uri = Uri(userUrl).withAuthQuery(Query.Empty)
     )
   }
+
+  protected def inertiaRequest(uri: Uri, queryString: Query = Query.Empty) = HttpRequest(
+    method = HttpMethods.POST,
+    uri = uri.withAuthQuery(queryString),
+    headers = List(acceptInertia)
+  )
+
+  protected def projectsUrl(user: User, repoName: String): String =
+    s"$baseUrl/repos/${user.login}/$repoName/projects"
+
+  protected def columnsUri(user: User, repoName: String, projectNumber: Int): String =
+    s"${projectsUrl(user, repoName)}/$projectNumber/columns"
 }
 
-//todo move to test/
 //noinspection NotImplementedCode
+//todo move to test/
 class MockGithubService extends GithubService {
-  override def createProject(user: User, repoName: String, projectName: String)(implicit ec: ExecutionContext): Future[Project] = ???
+  override def createProject(user: User, repoName: String, projectStub: ProjectStub)(implicit ec: ExecutionContext): Future[Project] = ???
 
-  override def createColumn(projectId: Long, column: Column)(implicit ec: ExecutionContext): Future[Unit] = ???
+  override def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)(implicit ec: ExecutionContext): Future[Card] = ???
+
+  override def createColumn(user: User, projectNumber: Int, repoName: String, columnStub: ColumnStub)(implicit ec: ExecutionContext): Future[Column] = ???
 
   override def getUser()(implicit ec: ExecutionContext): Future[User] = ???
 }
