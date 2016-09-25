@@ -1,6 +1,5 @@
-package com.kubukoz
+package com.kubukoz.trellocat
 
-import com.kubukoz.trellocat.Routes
 import com.kubukoz.trellocat.domain.Github._
 import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
 import com.kubukoz.trellocat.service._

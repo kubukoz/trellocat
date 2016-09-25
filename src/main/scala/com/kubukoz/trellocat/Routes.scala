@@ -1,7 +1,7 @@
 package com.kubukoz.trellocat
 
 import akka.http.scaladsl.server._
-import com.kubukoz.trellocat.domain.Github.{Card, Project, ProjectStub, User}
+import com.kubukoz.trellocat.domain.Github.{Card, Project, User}
 import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
 import com.kubukoz.trellocat.service.{GithubService, TrelloService}
 

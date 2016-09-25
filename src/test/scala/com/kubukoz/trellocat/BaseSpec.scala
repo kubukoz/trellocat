@@ -1,4 +1,4 @@
-package com.kubukoz
+package com.kubukoz.trellocat
 
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server._

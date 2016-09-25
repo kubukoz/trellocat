@@ -1,10 +1,10 @@
-package com.kubukoz
+package com.kubukoz.trellocat.service
 
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.server.Directives
+import com.kubukoz.trellocat.BaseSpec
 import com.kubukoz.trellocat.domain.Github._
 import com.kubukoz.trellocat.domain.{AuthParams, Github, JsonSupport}
-import com.kubukoz.trellocat.service.RealGithubService
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 
 import scala.concurrent.duration._
