@@ -1,7 +1,8 @@
-package com.kubukoz
+package com.kubukoz.trellocat.api
 
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
+import com.kubukoz.trellocat.BaseSpec
 import com.kubukoz.trellocat.api.ApiClient.AuthenticatedUri
 import com.kubukoz.trellocat.domain.AuthParams
 
