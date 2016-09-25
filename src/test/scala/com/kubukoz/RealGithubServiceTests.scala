@@ -22,14 +22,7 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
     val githubApiRoutes = {
       import Directives._
 
-      path("user") {
-        get {
-          parameter("access_token") {
-            case "some-token" =>
-              complete(user)
-          }
-        }
-      } ~ path("repos" / user.login / repoName / "projects") {
+      path("repos" / user.login / repoName / "projects") {
         post {
           parameter("access_token") {
             case "some-token" =>
@@ -54,19 +47,14 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
     val boardName = "Project 2"
     val repoName = "nope-nope"
     val userName = "some-user"
+    val user = User(userName)
 
     implicit val ap = AuthParams(Query("access_token" -> "token"))
 
     val githubApiRoutes = {
       import Directives._
 
-      path("user") {
-        get {
-          parameter("access_token") {
-            case "token" => complete(Github.User(userName))
-          }
-        }
-      } ~ path("repos" / userName / repoName / "projects") {
+      path("repos" / userName / repoName / "projects") {
         post {
           parameter("access_token") {
             case "token" => reject
@@ -81,7 +69,7 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     implicit val timeout = Timeout(1.second)
 
-    ghService.createProject(User(userName), repoName, ProjectStub(boardName)).failed.futureValue.getMessage shouldBe "Request was rejected"
+    ghService.createProject(user, repoName, ProjectStub(boardName)).failed.futureValue.getMessage shouldBe "Request was rejected"
   }
 
   "createColumn" should "create a column" in {
@@ -94,14 +82,7 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     val githubApiRoutes = {
       import Directives._
-      path("user") {
-        get {
-          parameter("access_token") {
-            case "some-token" =>
-              complete(user)
-          }
-        }
-      } ~ path("repos" / user.login / repoName / "projects" / "1" / "columns") {
+      path("repos" / user.login / repoName / "projects" / "1" / "columns") {
         post {
           parameter("access_token") {
             case "some-token" =>
@@ -130,14 +111,7 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     val githubApiRoutes = {
       import Directives._
-      path("user") {
-        get {
-          parameter("access_token") {
-            case "some-token" =>
-              complete(user)
-          }
-        }
-      } ~ path("repos" / user.login / repoName / "projects" / "2" / "columns") {
+      path("repos" / user.login / repoName / "projects" / "2" / "columns") {
         reject
       }
     }
