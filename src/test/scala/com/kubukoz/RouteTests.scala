@@ -68,9 +68,9 @@ class RouteTests extends BaseSpec with JsonSupport {
           )
         }
 
-      override def createColumn(user: User, projectNumber: Int, repoName: String, column: Github.ColumnStub)
-                               (implicit ec: ExecutionContext): Future[Column] = projectNumber match {
-        case 1 => Future.successful(null)
+      override def createColumn(user: User, project: Project, repoName: String, column: Github.ColumnStub)
+                               (implicit ec: ExecutionContext): Future[Column] = project match {
+        case Project(_, _, 1) => Future.successful(null)
       }
 
       override def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)

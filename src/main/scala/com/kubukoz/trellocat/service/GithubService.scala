@@ -23,7 +23,7 @@ trait GithubService {
   /**
     * Creates a column within a project.
     **/
-  def createColumn(user: User, projectNumber: Int, repoName: String, columnStub: ColumnStub)(implicit ec: ExecutionContext): Future[Column]
+  def createColumn(user: User, project: Project, repoName: String, columnStub: ColumnStub)(implicit ec: ExecutionContext): Future[Column]
 
   /**
     * Creates a project with the given name in the given repo, owned by the current user.
@@ -59,11 +59,11 @@ class RealGithubService(ap: AuthParams)(implicit api: ApiClient, mat: Materializ
       newCard <- api[Card](inertiaRequest(uri).withEntity(entity))
     } yield newCard
 
-  override def createColumn(user: User, projectNumber: Int, repoName: String, columnStub: ColumnStub)
+  override def createColumn(user: User, project: Project, repoName: String, columnStub: ColumnStub)
                            (implicit ec: ExecutionContext): Future[Column] =
     for {
       entity <- toEntity(columnStub)
-      uri = columnsUri(user, repoName, projectNumber)
+      uri = columnsUri(user, repoName, project)
       column <- api[Column](inertiaRequest(uri).withEntity(entity))
     } yield column
 
@@ -83,11 +83,11 @@ class RealGithubService(ap: AuthParams)(implicit api: ApiClient, mat: Materializ
   protected def projectsUrl(user: User, repoName: String): String =
     s"$baseUrl/repos/${user.login}/$repoName/projects"
 
-  protected def columnsUri(user: User, repoName: String, projectNumber: Int): String =
-    s"${projectsUrl(user, repoName)}/$projectNumber/columns"
+  protected def columnsUri(user: User, repoName: String, project: Project): String =
+    s"${projectsUrl(user, repoName)}/${project.number}/columns"
 
   protected def cardsUri(user: User, repoName: String, project: Project, column: Column): String =
-    s"${columnsUri(user, repoName, project.number)}/${column.number}/cards"
+    s"${columnsUri(user, repoName, project)}/${column.number}/cards"
 }
 
 //noinspection NotImplementedCode
@@ -97,7 +97,7 @@ class MockGithubService extends GithubService {
 
   override def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)(implicit ec: ExecutionContext): Future[Card] = ???
 
-  override def createColumn(user: User, projectNumber: Int, repoName: String, columnStub: ColumnStub)(implicit ec: ExecutionContext): Future[Column] = ???
+  override def createColumn(user: User, project: Project, repoName: String, columnStub: ColumnStub)(implicit ec: ExecutionContext): Future[Column] = ???
 
   override def getUser()(implicit ec: ExecutionContext): Future[User] = ???
 }

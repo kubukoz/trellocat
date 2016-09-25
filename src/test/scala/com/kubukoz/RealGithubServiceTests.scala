@@ -2,7 +2,7 @@ package com.kubukoz
 
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.server.Directives
-import com.kubukoz.trellocat.domain.Github.{Column, ColumnStub, ProjectStub, User}
+import com.kubukoz.trellocat.domain.Github._
 import com.kubukoz.trellocat.domain.{AuthParams, Github, JsonSupport}
 import com.kubukoz.trellocat.service.RealGithubService
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
@@ -99,7 +99,7 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     val ghService = new RealGithubService(ap)
 
-    ghService.createColumn(user, 1, repoName, ColumnStub(columnName)).futureValue shouldBe column
+    ghService.createColumn(user, Project(1, "my-project", 1), repoName, ColumnStub(columnName)).futureValue shouldBe column
   }
 
   it should "not create a column if the related project doesn't exist" in {
@@ -120,6 +120,6 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     val ghService = new RealGithubService(ap)
 
-    ghService.createColumn(user, 2, repoName, ColumnStub(columnName)).failed.futureValue.getMessage shouldBe "Request was rejected"
+    ghService.createColumn(user, Project(2, "my-project", 2), repoName, ColumnStub(columnName)).failed.futureValue.getMessage shouldBe "Request was rejected"
   }
 }
