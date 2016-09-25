@@ -16,7 +16,9 @@ import scala.concurrent.{ExecutionContext, Future}
   * Accesses the GitHub API.
   **/
 trait GithubService {
-  //todo doc
+  /**
+    * Creates a card within a column.
+    * */
   def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)
                 (implicit ec: ExecutionContext): Future[Card]
 
