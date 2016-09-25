@@ -48,7 +48,7 @@ class TransferService(user: User, repoName: String, project: Github.Project)
   def transferColumns(columns: List[Trello.Column]): Future[List[Github.Card]] =
     Future.sequence {
       columns.map { trelloColumn =>
-        githubService.createColumn(user, project.number, repoName, trelloColumn.toGithubStub).flatMap {
+        githubService.createColumn(user, project, repoName, trelloColumn.toGithubStub).flatMap {
           transferCards(trelloColumn.cards, _)
         }
       }
