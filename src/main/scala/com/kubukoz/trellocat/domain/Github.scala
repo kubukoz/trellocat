@@ -16,14 +16,19 @@ object Github {
   case class Project(id: Int, name: String, number: Int)
 
   /**
+    * Representation of a column to be created.
+    **/
+  case class ColumnStub(name: String)
+
+  /**
     * A list of cards.
     **/
-  case class Column(name: String)
+  case class Column(name: String, number: Int)
 
   /**
     * A GitHub Project card
     **/
-  case class Card(id: String, name: String)
+  case class Card(name: String)
 
   /**
     * A GitHub user.

@@ -16,15 +16,19 @@ import scala.concurrent.{ExecutionContext, Future}
   * Accesses the GitHub API.
   **/
 trait GithubService {
+  //todo doc
+  def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)
+                (implicit ec: ExecutionContext): Future[Card]
+
   /**
     * Creates a column within a project.
     **/
-  def createColumn(user: User, projectNumber: Int, repoName: String, column: Column)(implicit ec: ExecutionContext): Future[Column]
+  def createColumn(user: User, projectNumber: Int, repoName: String, columnStub: ColumnStub)(implicit ec: ExecutionContext): Future[Column]
 
   /**
     * Creates a project with the given name in the given repo, owned by the current user.
     **/
-  def createProject(user: User, repoName: String, projectName: String)(implicit ec: ExecutionContext): Future[Github.Project]
+  def createProject(user: User, repoName: String, projectStub: ProjectStub)(implicit ec: ExecutionContext): Future[Github.Project]
 
   /**
     * Returns information about the current user.
@@ -40,17 +44,20 @@ class RealGithubService(ap: AuthParams)(implicit api: ApiClient, mat: Materializ
 
   implicit val app = ap
 
-  override def createProject(user: User, repoName: String, projectName: String)(implicit ec: ExecutionContext): Future[Project] = {
+  override def createProject(user: User, repoName: String, projectStub: ProjectStub)(implicit ec: ExecutionContext): Future[Project] = {
     for {
-      entity <- toEntity(ProjectStub(projectName))
+      entity <- toEntity(projectStub)
       project <- api[Project](inertiaRequest(projectsUrl(user, repoName)).withEntity(entity))
     } yield project
   }
 
-  override def createColumn(user: User, projectNumber: Int, repoName: String, column: Column)
+  override def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)
+                         (implicit ec: ExecutionContext): Future[Card] = ???
+
+  override def createColumn(user: User, projectNumber: Int, repoName: String, columnStub: ColumnStub)
                            (implicit ec: ExecutionContext): Future[Column] =
     for {
-      entity <- toEntity(column)
+      entity <- toEntity(columnStub)
       uri = columnsUri(user, repoName, projectNumber)
       column <- api[Column](inertiaRequest(uri).withEntity(entity))
     } yield column
@@ -78,9 +85,11 @@ class RealGithubService(ap: AuthParams)(implicit api: ApiClient, mat: Materializ
 //noinspection NotImplementedCode
 //todo move to test/
 class MockGithubService extends GithubService {
-  override def createProject(user: User, repoName: String, projectName: String)(implicit ec: ExecutionContext): Future[Project] = ???
+  override def createProject(user: User, repoName: String, projectStub: ProjectStub)(implicit ec: ExecutionContext): Future[Project] = ???
 
-  override def createColumn(user: User, projectNumber: Int, repoName: String, column: Column)(implicit ec: ExecutionContext): Future[Column] = ???
+  override def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)(implicit ec: ExecutionContext): Future[Card] = ???
+
+  override def createColumn(user: User, projectNumber: Int, repoName: String, columnStub: ColumnStub)(implicit ec: ExecutionContext): Future[Column] = ???
 
   override def getUser()(implicit ec: ExecutionContext): Future[User] = ???
 }

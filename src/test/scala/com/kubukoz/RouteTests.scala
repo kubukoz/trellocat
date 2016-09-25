@@ -1,7 +1,7 @@
 package com.kubukoz
 
 import com.kubukoz.trellocat.Routes
-import com.kubukoz.trellocat.domain.Github.{Column, User}
+import com.kubukoz.trellocat.domain.Github._
 import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
 import com.kubukoz.trellocat.service._
 
@@ -60,18 +60,22 @@ class RouteTests extends BaseSpec with JsonSupport {
     }
 
     val mockGithubService = new MockGithubService {
-      override def createProject(rUser: User, rRepoName: String, projectName: String)
+      override def createProject(rUser: User, rRepoName: String, projectStub: ProjectStub)
                                 (implicit ec: ExecutionContext): Future[Github.Project] =
-        (rUser, rRepoName, projectName) match {
-          case (`user`, `repoName`, `transferredBoardName`) => Future.successful(
+        (rUser, rRepoName, projectStub) match {
+          case (`user`, `repoName`, ProjectStub(`transferredBoardName`)) => Future.successful(
             Github.Project(expectedProjectId, transferredBoardName, 1)
           )
         }
 
-      override def createColumn(user: User, projectNumber: Int, repoName: String, column: Github.Column)
+      override def createColumn(user: User, projectNumber: Int, repoName: String, column: Github.ColumnStub)
                                (implicit ec: ExecutionContext): Future[Column] = projectNumber match {
-        case 1 => Future.successful(column)
+        case 1 => Future.successful(null)
       }
+
+      override def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)
+                             (implicit ec: ExecutionContext): Future[Card] =
+        Future.successful(card)
 
       override def getUser()(implicit ec: ExecutionContext): Future[User] = Future.successful(user)
     }
