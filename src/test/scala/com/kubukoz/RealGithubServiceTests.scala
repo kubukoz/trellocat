@@ -46,8 +46,8 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     val ghService = new RealGithubService(ap)
 
-    implicit val timeout = Timeout(1.second)
-    ghService.createProject(user, repoName, ProjectStub(boardName)).futureValue shouldBe Github.Project(projectId, boardName, 1)
+    implicit val timeout = Timeout(3.seconds)
+    ghService.createProject(user, repoName, ProjectStub(boardName)).futureValue(timeout) shouldBe Github.Project(projectId, boardName, 1)
   }
 
   it should "handle trying to create a project in a nonexistent repo" in {
