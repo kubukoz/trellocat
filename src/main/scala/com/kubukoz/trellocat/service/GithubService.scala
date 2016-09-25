@@ -52,7 +52,12 @@ class RealGithubService(ap: AuthParams)(implicit api: ApiClient, mat: Materializ
   }
 
   override def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)
-                         (implicit ec: ExecutionContext): Future[Card] = ???
+                         (implicit ec: ExecutionContext): Future[Card] =
+    for {
+      entity <- toEntity(card)
+      uri = cardsUri(user, repoName, project, column)
+      newCard <- api[Card](inertiaRequest(uri).withEntity(entity))
+    } yield newCard
 
   override def createColumn(user: User, projectNumber: Int, repoName: String, columnStub: ColumnStub)
                            (implicit ec: ExecutionContext): Future[Column] =
@@ -80,6 +85,9 @@ class RealGithubService(ap: AuthParams)(implicit api: ApiClient, mat: Materializ
 
   protected def columnsUri(user: User, repoName: String, projectNumber: Int): String =
     s"${projectsUrl(user, repoName)}/$projectNumber/columns"
+
+  protected def cardsUri(user: User, repoName: String, project: Project, column: Column): String =
+    s"${columnsUri(user, repoName, project.number)}/${column.number}/cards"
 }
 
 //noinspection NotImplementedCode
