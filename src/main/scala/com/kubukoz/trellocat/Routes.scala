@@ -18,6 +18,10 @@ trait Routes extends JsonSupport {
         trelloService.allBoards
       }
     }
+  } ~ path("repos") {
+    complete {
+      githubService.allRepos
+    }
   } ~ path("transfer") {
     parameters('from, 'to) { (trelloBoardId, repoName) =>
       post {

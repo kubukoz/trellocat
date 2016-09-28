@@ -17,8 +17,13 @@ import scala.concurrent.{ExecutionContext, Future}
   **/
 trait GithubService {
   /**
+    * Provides a list of all of the user's repos.
+    **/
+  def allRepos(implicit ec: ExecutionContext): Future[List[Repo]]
+
+  /**
     * Creates a card within a column.
-    * */
+    **/
   def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)
                 (implicit ec: ExecutionContext): Future[Card]
 
@@ -53,6 +58,9 @@ class RealGithubService(ap: AuthParams)(implicit api: ApiClient, mat: Materializ
     } yield project
   }
 
+  override def allRepos(implicit ec: ExecutionContext): Future[List[Repo]] =
+    api[List[Repo]](HttpRequest(uri = Uri(s"$baseUrl/user/repos").withAuthQuery(Query.Empty)))
+
   override def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)
                          (implicit ec: ExecutionContext): Future[Card] =
     for {
@@ -69,12 +77,8 @@ class RealGithubService(ap: AuthParams)(implicit api: ApiClient, mat: Materializ
       column <- api[Column](inertiaRequest(uri).withEntity(entity))
     } yield column
 
-  override def getUser()(implicit ec: ExecutionContext): Future[User] = api[User] {
-    HttpRequest(
-      method = HttpMethods.GET,
-      uri = Uri(userUrl).withAuthQuery(Query.Empty)
-    )
-  }
+  override def getUser()(implicit ec: ExecutionContext): Future[User] =
+    api[User](HttpRequest(uri = Uri(userUrl).withAuthQuery(Query.Empty)))
 
   protected def inertiaRequest(uri: Uri, queryString: Query = Query.Empty) = HttpRequest(
     method = HttpMethods.POST,

@@ -17,4 +17,5 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val githubCardFormat = jsonFormat1(Github.Card.apply)
   implicit val githubColumnStubFormat = jsonFormat1(Github.ColumnStub.apply)
   implicit val githubColumnFormat = jsonFormat2(Github.Column.apply)
+  implicit val githubRepoFormat = jsonFormat1(Github.Repo.apply)
 }
