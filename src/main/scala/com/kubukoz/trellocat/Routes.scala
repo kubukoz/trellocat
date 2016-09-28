@@ -1,6 +1,6 @@
 package com.kubukoz.trellocat
 
-import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.Directives._
 import com.kubukoz.trellocat.domain.Github.{Card, Project, User}
 import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
 import com.kubukoz.trellocat.service.{GithubService, TrelloService}
@@ -8,7 +8,7 @@ import com.kubukoz.trellocat.service.{GithubService, TrelloService}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait Routes extends Directives with JsonSupport {
+trait Routes extends JsonSupport {
   val trelloService: TrelloService
   val githubService: GithubService
 
