@@ -37,6 +37,7 @@ object Github {
 
   /**
     * A repository.
-    * */
+    **/
   case class Repo(name: String)
+
 }

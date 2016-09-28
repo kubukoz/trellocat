@@ -24,18 +24,18 @@ trait GithubService {
   /**
     * Creates a card within a column.
     **/
-  def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)
+  def createCard(user: User, project: Project, repo: Repo, column: Column, card: Card)
                 (implicit ec: ExecutionContext): Future[Card]
 
   /**
     * Creates a column within a project.
     **/
-  def createColumn(user: User, project: Project, repoName: String, columnStub: ColumnStub)(implicit ec: ExecutionContext): Future[Column]
+  def createColumn(user: User, project: Project, repo: Repo, columnStub: ColumnStub)(implicit ec: ExecutionContext): Future[Column]
 
   /**
     * Creates a project with the given name in the given repo, owned by the current user.
     **/
-  def createProject(user: User, repoName: String, projectStub: ProjectStub)(implicit ec: ExecutionContext): Future[Github.Project]
+  def createProject(user: User, repo: Repo, projectStub: ProjectStub)(implicit ec: ExecutionContext): Future[Github.Project]
 
   /**
     * Returns information about the current user.
@@ -51,29 +51,29 @@ class RealGithubService(ap: AuthParams)(implicit api: ApiClient, mat: Materializ
 
   implicit val app = ap
 
-  override def createProject(user: User, repoName: String, projectStub: ProjectStub)(implicit ec: ExecutionContext): Future[Project] = {
+  override def createProject(user: User, repo: Repo, projectStub: ProjectStub)(implicit ec: ExecutionContext): Future[Project] = {
     for {
       entity <- toEntity(projectStub)
-      project <- api[Project](inertiaRequest(projectsUrl(user, repoName)).withEntity(entity))
+      project <- api[Project](inertiaRequest(projectsUrl(user, repo)).withEntity(entity))
     } yield project
   }
 
   override def allRepos(implicit ec: ExecutionContext): Future[List[Repo]] =
     api[List[Repo]](HttpRequest(uri = Uri(s"$baseUrl/user/repos").withAuthQuery(Query.Empty)))
 
-  override def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)
+  override def createCard(user: User, project: Project, repo: Repo, column: Column, card: Card)
                          (implicit ec: ExecutionContext): Future[Card] =
     for {
       entity <- toEntity(card)
-      uri = cardsUri(user, repoName, project, column)
+      uri = cardsUri(user, repo, project, column)
       newCard <- api[Card](inertiaRequest(uri).withEntity(entity))
     } yield newCard
 
-  override def createColumn(user: User, project: Project, repoName: String, columnStub: ColumnStub)
+  override def createColumn(user: User, project: Project, repo: Repo, columnStub: ColumnStub)
                            (implicit ec: ExecutionContext): Future[Column] =
     for {
       entity <- toEntity(columnStub)
-      uri = columnsUri(user, repoName, project)
+      uri = columnsUri(user, repo, project)
       column <- api[Column](inertiaRequest(uri).withEntity(entity))
     } yield column
 
@@ -86,12 +86,12 @@ class RealGithubService(ap: AuthParams)(implicit api: ApiClient, mat: Materializ
     headers = List(acceptInertia)
   )
 
-  protected def projectsUrl(user: User, repoName: String): String =
-    s"$baseUrl/repos/${user.login}/$repoName/projects"
+  protected def projectsUrl(user: User, repo: Repo): String =
+    s"$baseUrl/repos/${user.login}/${repo.name}/projects"
 
-  protected def columnsUri(user: User, repoName: String, project: Project): String =
-    s"${projectsUrl(user, repoName)}/${project.number}/columns"
+  protected def columnsUri(user: User, repo: Repo, project: Project): String =
+    s"${projectsUrl(user, repo)}/${project.number}/columns"
 
-  protected def cardsUri(user: User, repoName: String, project: Project, column: Column): String =
-    s"${columnsUri(user, repoName, project)}/${column.number}/cards"
+  protected def cardsUri(user: User, repo: Repo, project: Project, column: Column): String =
+    s"${columnsUri(user, repo, project)}/${column.number}/cards"
 }
