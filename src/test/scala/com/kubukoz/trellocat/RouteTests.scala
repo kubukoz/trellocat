@@ -18,7 +18,7 @@ class RouteTests extends BaseSpec with JsonSupport {
 
     val routes = new Routes {
       override val trelloService: TrelloService = mockTrelloService
-      override val githubService: GithubService = new MockGithubService {}
+      override val githubService: GithubService = new MockGithubService
     }
 
     Get("/boards") ~> routes.routes ~> check {
@@ -86,6 +86,27 @@ class RouteTests extends BaseSpec with JsonSupport {
 
     Post(s"/transfer?from=$transferredBoardId&to=$repoName") ~> router.routes ~> check {
       responseAs[Github.Project] shouldBe Github.Project(expectedProjectId, transferredBoardName, 1)
+    }
+  }
+
+  "/repos" should "return a list of repos" in {
+    val mockGithubService = new MockGithubService {
+      override def allRepos(implicit ec: ExecutionContext): Future[List[Repo]] =
+        Future.successful(List(
+          Github.Repo("hello"),
+          Github.Repo("world")
+        ))
+    }
+    val routes = new Routes {
+      override val trelloService: TrelloService = new MockTrelloService
+      override val githubService: GithubService = mockGithubService
+    }
+
+    Get("/repos") ~> routes.routes ~> check {
+      responseAs[List[Github.Repo]] shouldBe List(
+        Github.Repo("hello"),
+        Github.Repo("world")
+      )
     }
   }
 }

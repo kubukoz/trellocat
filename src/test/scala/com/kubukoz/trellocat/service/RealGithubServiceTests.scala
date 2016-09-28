@@ -107,8 +107,6 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
     val repoName = "some-repo"
     val user = User("some-user")
 
-    val ap = AuthParams(Query("access_token" -> "some-token"))
-
     val githubApiRoutes = {
       import Directives._
       path("repos" / user.login / repoName / "projects" / "2" / "columns") {
@@ -118,8 +116,29 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     implicit val client = new MockApiClient(githubApiRoutes)
 
+    val ap = AuthParams(Query("access_token" -> "some-token"))
     val ghService = new RealGithubService(ap)
 
     ghService.createColumn(user, Project(2, "my-project", 2), repoName, ColumnStub(columnName)).failed.futureValue.getMessage shouldBe "Request was rejected"
+  }
+
+  "allRepos" should "return a list of repos" in {
+    val githubApiRoutes = {
+      import Directives._
+      path("user" / "repos") {
+        parameter("access_token") {
+          case "some-token" => complete(List(
+            Github.Repo("hello"),
+            Github.Repo("world")
+          ))
+        }
+      }
+    }
+
+    implicit val client = new MockApiClient(githubApiRoutes)
+
+    val ap = AuthParams(Query("access_token" -> "some-token"))
+    val ghService = new RealGithubService(ap)
+    ghService.allRepos.futureValue shouldBe List(Github.Repo("hello"), Github.Repo("world"))
   }
 }
