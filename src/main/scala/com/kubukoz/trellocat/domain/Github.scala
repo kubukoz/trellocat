@@ -35,4 +35,9 @@ object Github {
     **/
   case class User(login: String)
 
+  /**
+    * A repository.
+    **/
+  case class Repo(name: String)
+
 }

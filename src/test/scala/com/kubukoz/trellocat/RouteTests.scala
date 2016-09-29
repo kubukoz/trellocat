@@ -18,7 +18,7 @@ class RouteTests extends BaseSpec with JsonSupport {
 
     val routes = new Routes {
       override val trelloService: TrelloService = mockTrelloService
-      override val githubService: GithubService = new MockGithubService {}
+      override val githubService: GithubService = new MockGithubService
     }
 
     Get("/boards") ~> routes.routes ~> check {
@@ -33,7 +33,7 @@ class RouteTests extends BaseSpec with JsonSupport {
     val transferredBoardId = "BOARD-ID"
     val transferredBoardName = "Transferred board 1"
 
-    val repoName = "my-repo"
+    val repo = Repo("my-repo")
     val expectedProjectId = 100
     val user = User("user-name")
 
@@ -59,20 +59,20 @@ class RouteTests extends BaseSpec with JsonSupport {
     }
 
     val mockGithubService = new MockGithubService {
-      override def createProject(rUser: User, rRepoName: String, projectStub: ProjectStub)
+      override def createProject(rUser: User, rRepo: Repo, projectStub: ProjectStub)
                                 (implicit ec: ExecutionContext): Future[Github.Project] =
-        (rUser, rRepoName, projectStub) match {
-          case (`user`, `repoName`, ProjectStub(`transferredBoardName`)) => Future.successful(
+        (rUser, rRepo, projectStub) match {
+          case (`user`, `repo`, ProjectStub(`transferredBoardName`)) => Future.successful(
             Github.Project(expectedProjectId, transferredBoardName, 1)
           )
         }
 
-      override def createColumn(user: User, project: Project, repoName: String, column: Github.ColumnStub)
+      override def createColumn(user: User, project: Project, repo: Repo, column: Github.ColumnStub)
                                (implicit ec: ExecutionContext): Future[Column] = project match {
         case Project(_, _, 1) => Future.successful(null)
       }
 
-      override def createCard(user: User, project: Project, repoName: String, column: Column, card: Card)
+      override def createCard(user: User, project: Project, repo: Repo, column: Column, card: Card)
                              (implicit ec: ExecutionContext): Future[Card] =
         Future.successful(card)
 
@@ -84,8 +84,29 @@ class RouteTests extends BaseSpec with JsonSupport {
       override val githubService: GithubService = mockGithubService
     }
 
-    Post(s"/transfer?from=$transferredBoardId&to=$repoName") ~> router.routes ~> check {
+    Post(s"/transfer?from=$transferredBoardId&to=${repo.name}") ~> router.routes ~> check {
       responseAs[Github.Project] shouldBe Github.Project(expectedProjectId, transferredBoardName, 1)
+    }
+  }
+
+  "/repos" should "return a list of repos" in {
+    val mockGithubService = new MockGithubService {
+      override def allRepos(implicit ec: ExecutionContext): Future[List[Repo]] =
+        Future.successful(List(
+          Github.Repo("hello"),
+          Github.Repo("world")
+        ))
+    }
+    val routes = new Routes {
+      override val trelloService: TrelloService = new MockTrelloService
+      override val githubService: GithubService = mockGithubService
+    }
+
+    Get("/repos") ~> routes.routes ~> check {
+      responseAs[List[Github.Repo]] shouldBe List(
+        Github.Repo("hello"),
+        Github.Repo("world")
+      )
     }
   }
 }
