@@ -5,14 +5,13 @@ import com.kubukoz.trellocat.domain.Github.Repo
 import com.kubukoz.trellocat.domain.{Github, JsonSupport}
 import com.kubukoz.trellocat.service.{GithubService, TransferService, TrelloService}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 trait Routes extends JsonSupport {
   val trelloService: TrelloService
   val githubService: GithubService
 
-  val routes = path("boards") {
+  def routes(implicit ec: ExecutionContext) = path("boards") {
     get {
       complete {
         trelloService.allBoards
