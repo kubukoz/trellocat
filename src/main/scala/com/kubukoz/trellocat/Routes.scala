@@ -1,12 +1,12 @@
 package com.kubukoz.trellocat
 
 import akka.http.scaladsl.server.Directives._
-import com.kubukoz.trellocat.domain.Github.{Card, Project, Repo, User}
-import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
-import com.kubukoz.trellocat.service.{GithubService, TrelloService}
+import com.kubukoz.trellocat.domain.Github.Repo
+import com.kubukoz.trellocat.domain.{Github, JsonSupport}
+import com.kubukoz.trellocat.service.{GithubService, TransferService, TrelloService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait Routes extends JsonSupport {
   val trelloService: TrelloService
@@ -32,7 +32,7 @@ trait Routes extends JsonSupport {
     }
   }
 
-  def transferBoardWithId(boardId: String, repo: Repo): Future[Project] = {
+  def transferBoardWithId(boardId: String, repo: Github.Repo)(implicit ec: ExecutionContext): Future[Github.Project] = {
     val userF = githubService.getUser()
 
     for {
@@ -44,24 +44,4 @@ trait Routes extends JsonSupport {
       _ <- transferService.transferColumns(columns)
     } yield project
   }
-}
-
-class TransferService(user: User, repo: Repo, project: Github.Project)
-                     (githubService: GithubService) {
-
-  def transferColumns(columns: List[Trello.Column]): Future[List[Github.Card]] =
-    Future.sequence {
-      columns.map { trelloColumn =>
-        githubService.createColumn(user, project, repo, trelloColumn.toGithubStub).flatMap {
-          transferCards(trelloColumn.cards, _)
-        }
-      }
-    }.map(_.flatten)
-
-  def transferCards(cards: List[Trello.Card], ghColumn: Github.Column): Future[List[Card]] =
-    Future.sequence {
-      cards.map { trelloCard =>
-        githubService.createCard(user, project, repo, ghColumn, trelloCard.toGithubStub)
-      }
-    }
 }
