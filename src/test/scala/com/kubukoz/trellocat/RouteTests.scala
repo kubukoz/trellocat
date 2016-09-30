@@ -67,9 +67,13 @@ class RouteTests extends BaseSpec with JsonSupport {
           )
         }
 
+      var columnIndex = 0
+
       override def createColumn(user: User, project: Project, repo: Repo, column: Github.ColumnStub)
                                (implicit ec: ExecutionContext): Future[Column] = project match {
-        case Project(_, _, 1) => Future.successful(null)
+        case Project(_, _, 1) =>
+          columnIndex += 1
+          Future.successful(Github.Column(column.name, columnIndex))
       }
 
       override def createCard(user: User, project: Project, repo: Repo, column: Column, card: Card)
@@ -85,7 +89,20 @@ class RouteTests extends BaseSpec with JsonSupport {
     }
 
     Post(s"/transfer?from=$transferredBoardId&to=${repo.name}") ~> router.routes ~> check {
-      responseAs[Github.Project] shouldBe Github.Project(expectedProjectId, transferredBoardName, 1)
+      responseAs[Github.ProjectWithColumns] shouldBe
+        Github.ProjectWithColumns(
+          Github.Project(expectedProjectId, transferredBoardName, 1),
+          List(
+            ColumnWithCards(Github.Column("Column 1", 1), List(
+              Github.Card("Card 1"),
+              Github.Card("Card 2")
+            )),
+            ColumnWithCards(Github.Column("Column 2", 2), List(
+              Github.Card("Card 3"),
+              Github.Card("Card 4")
+            ))
+          )
+        )
     }
   }
 

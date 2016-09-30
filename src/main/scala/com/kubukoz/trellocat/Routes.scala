@@ -1,7 +1,7 @@
 package com.kubukoz.trellocat
 
 import akka.http.scaladsl.server.Directives._
-import com.kubukoz.trellocat.domain.Github.{Card, Project, Repo, User}
+import com.kubukoz.trellocat.domain.Github._
 import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
 import com.kubukoz.trellocat.service.{GithubService, TrelloService}
 
@@ -32,7 +32,7 @@ trait Routes extends JsonSupport {
     }
   }
 
-  def transferBoardWithId(boardId: String, repo: Repo): Future[Project] = {
+  def transferBoardWithId(boardId: String, repo: Repo): Future[ProjectWithColumns] = {
     val userF = githubService.getUser()
 
     for {
@@ -41,22 +41,23 @@ trait Routes extends JsonSupport {
       user <- userF
       project <- githubService.createProject(user, repo, board.toGithubStub)
       transferService = new TransferService(user, repo, project)(githubService)
-      _ <- transferService.transferColumns(columns)
-    } yield project
+      columns <- transferService.transferColumns(columns)
+    } yield ProjectWithColumns(project, columns)
   }
 }
 
 class TransferService(user: User, repo: Repo, project: Github.Project)
                      (githubService: GithubService) {
 
-  def transferColumns(columns: List[Trello.Column]): Future[List[Github.Card]] =
+  def transferColumns(columns: List[Trello.Column]): Future[List[Github.ColumnWithCards]] =
     Future.sequence {
       columns.map { trelloColumn =>
-        githubService.createColumn(user, project, repo, trelloColumn.toGithubStub).flatMap {
-          transferCards(trelloColumn.cards, _)
-        }
+        for {
+          createdColumn <- githubService.createColumn(user, project, repo, trelloColumn.toGithubStub)
+          createdCards <- transferCards(trelloColumn.cards, createdColumn)
+        } yield ColumnWithCards(createdColumn, createdCards)
       }
-    }.map(_.flatten)
+    }
 
   def transferCards(cards: List[Trello.Card], ghColumn: Github.Column): Future[List[Card]] =
     Future.sequence {
