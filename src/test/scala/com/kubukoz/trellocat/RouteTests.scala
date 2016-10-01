@@ -1,10 +1,12 @@
 package com.kubukoz.trellocat
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
 import com.kubukoz.trellocat.domain.Github._
 import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
 import com.kubukoz.trellocat.service._
 import com.kubukoz.trellocat.util.StatusCodeException
+import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -127,4 +129,13 @@ class RouteTests extends BaseSpec with JsonSupport {
       responseAs[String] shouldBe "Unauthorized"
     }
   }
+
+  override protected def createActorSystem(): ActorSystem =
+    ActorSystem("customDirectivesTests", ConfigFactory.parseString(
+      """
+        |akka {
+        | stdout-loglevel = "OFF"
+        | loglevel = "OFF"
+        |}
+      """.stripMargin))
 }

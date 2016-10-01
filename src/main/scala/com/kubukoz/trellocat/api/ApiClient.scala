@@ -2,7 +2,7 @@ package com.kubukoz.trellocat.api
 
 import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.model.Uri.Query
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCode, Uri}
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import akka.http.scaladsl.unmarshalling.{FromResponseUnmarshaller, Unmarshal}
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.Materializer
