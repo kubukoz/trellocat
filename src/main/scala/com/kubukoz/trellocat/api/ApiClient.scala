@@ -2,10 +2,12 @@ package com.kubukoz.trellocat.api
 
 import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.model.Uri.Query
-import akka.http.scaladsl.model.{HttpRequest, Uri}
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import akka.http.scaladsl.unmarshalling.{FromResponseUnmarshaller, Unmarshal}
+import akka.http.scaladsl.util.FastFuture
 import akka.stream.Materializer
 import com.kubukoz.trellocat.domain.AuthParams
+import com.kubukoz.trellocat.util.StatusCodeException
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -25,7 +27,14 @@ trait ApiClient {
 class RealApiClient(implicit http: HttpExt, materializer: Materializer) extends ApiClient {
   override def apply[T: FromResponseUnmarshaller](request: HttpRequest)
                                                  (implicit ec: ExecutionContext): Future[T] =
-    http.singleRequest(request).flatMap(Unmarshal(_).to[T])
+    http.singleRequest(request).flatMap(unmarshalOrThrow[T])
+
+  def unmarshalOrThrow[T: FromResponseUnmarshaller](result: HttpResponse)
+                                                   (implicit ec: ExecutionContext): Future[T] =
+    Unmarshal(result).to[T].recoverWith {
+      case _ if result.status.isFailure =>
+        FastFuture.failed(StatusCodeException(result.status))
+    }
 }
 
 object ApiClient {

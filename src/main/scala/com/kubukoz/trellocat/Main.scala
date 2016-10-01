@@ -33,7 +33,8 @@ object Main extends Routes {
   def main(args: Array[String]): Unit = {
     val server = http.bindAndHandle(routes, "localhost", 8080)
 
-    io.StdIn.readLine("Press enter to stop")
+    println("Press enter to stop")
+    io.StdIn.readLine()
     server.flatMap(_.unbind()).foreach(_ => system.terminate())
   }
 }
