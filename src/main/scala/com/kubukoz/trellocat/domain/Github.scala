@@ -40,4 +40,15 @@ object Github {
     **/
   case class Repo(name: String)
 
+
+  /**
+    * Final representation of a project with columns.
+    **/
+  case class ProjectWithColumns(project: Project, columns: List[ColumnWithCards])
+
+  /**
+    * Final representation of a column with cards.
+    **/
+  case class ColumnWithCards(column: Column, cards: List[Card])
+
 }

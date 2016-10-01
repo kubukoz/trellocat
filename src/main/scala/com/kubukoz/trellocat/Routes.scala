@@ -1,7 +1,7 @@
 package com.kubukoz.trellocat
 
 import akka.http.scaladsl.server.Directives._
-import com.kubukoz.trellocat.domain.Github.Repo
+import com.kubukoz.trellocat.domain.Github._
 import com.kubukoz.trellocat.domain.{Github, JsonSupport}
 import com.kubukoz.trellocat.service.{GithubService, TransferService, TrelloService}
 
@@ -31,7 +31,8 @@ trait Routes extends JsonSupport {
     }
   }
 
-  def transferBoardWithId(boardId: String, repo: Github.Repo)(implicit ec: ExecutionContext): Future[Github.Project] = {
+  def transferBoardWithId(boardId: String, repo: Github.Repo)
+                         (implicit ec: ExecutionContext): Future[Github.ProjectWithColumns] = {
     val userF = githubService.getUser()
 
     for {
@@ -40,7 +41,7 @@ trait Routes extends JsonSupport {
       user <- userF
       project <- githubService.createProject(user, repo, board.toGithubStub)
       transferService = new TransferService(user, repo, project)(githubService)
-      _ <- transferService.transferColumns(columns)
-    } yield project
+      columns <- transferService.transferColumns(columns)
+    } yield ProjectWithColumns(project, columns)
   }
 }
