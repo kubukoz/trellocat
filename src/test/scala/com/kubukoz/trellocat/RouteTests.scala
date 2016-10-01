@@ -1,8 +1,10 @@
 package com.kubukoz.trellocat
 
+import akka.http.scaladsl.model.StatusCodes
 import com.kubukoz.trellocat.domain.Github._
 import com.kubukoz.trellocat.domain.{Github, JsonSupport, Trello}
 import com.kubukoz.trellocat.service._
+import com.kubukoz.trellocat.util.StatusCodeException
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -97,6 +99,7 @@ class RouteTests extends BaseSpec with JsonSupport {
           Github.Repo("world")
         ))
     }
+
     val routes = new Routes {
       override val trelloService: TrelloService = new MockTrelloService
       override val githubService: GithubService = mockGithubService
@@ -107,6 +110,21 @@ class RouteTests extends BaseSpec with JsonSupport {
         Github.Repo("hello"),
         Github.Repo("world")
       )
+    }
+  }
+
+  "/repos" should "return Unauthorized if the token is wrong" in {
+    val mockGithubService = new MockGithubService {
+      override def allRepos(implicit ec: ExecutionContext): Future[List[Repo]] =
+        Future.failed(StatusCodeException(StatusCodes.Unauthorized))
+    }
+    val routes = new Routes {
+      override val trelloService: TrelloService = new MockTrelloService
+      override val githubService: GithubService = mockGithubService
+    }
+
+    Get("/repos") ~> routes.routes ~> check {
+      responseAs[String] shouldBe "Unauthorized"
     }
   }
 }
