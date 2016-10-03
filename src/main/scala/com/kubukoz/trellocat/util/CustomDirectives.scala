@@ -3,6 +3,7 @@ package com.kubukoz.trellocat.util
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, _}
+import com.kubukoz.trellocat.domain.{GithubToken, TrelloToken}
 
 object CustomDirectives {
   /**
@@ -20,4 +21,10 @@ object CustomDirectives {
       }
     )
   }
+
+  def withGithubToken: Directive1[GithubToken] =
+    headerValueByName("GITHUB-TOKEN").map(GithubToken)
+
+  def withTrelloToken: Directive1[TrelloToken] =
+    headerValueByName("TRELLO-TOKEN").map(TrelloToken)
 }
