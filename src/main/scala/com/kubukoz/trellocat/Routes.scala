@@ -1,7 +1,6 @@
 package com.kubukoz.trellocat
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server._
 import com.kubukoz.trellocat.domain.Github._
 import com.kubukoz.trellocat.domain.{Github, GithubToken, JsonSupport, TrelloToken}
 import com.kubukoz.trellocat.service._
@@ -12,16 +11,6 @@ import scala.concurrent.{ExecutionContext, Future}
 trait Routes extends JsonSupport {
   val githubService: GithubService
   val trelloService: TrelloService
-
-  //todo these belong somewhere else
-  def withGithubToken: Directive1[GithubToken] =
-  headerValueByName("GITHUB-TOKEN")
-    .map(GithubToken)
-
-  def withTrelloToken: Directive1[TrelloToken] =
-    headerValueByName("TRELLO-TOKEN")
-      .map(TrelloToken)
-
 
   def routes(implicit ec: ExecutionContext) = logAndHandleExternalExceptions {
     path("boards") {
