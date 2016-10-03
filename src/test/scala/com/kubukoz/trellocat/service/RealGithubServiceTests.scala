@@ -1,10 +1,9 @@
 package com.kubukoz.trellocat.service
 
-import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.server.Directives
 import com.kubukoz.trellocat.BaseSpec
 import com.kubukoz.trellocat.domain.Github._
-import com.kubukoz.trellocat.domain.{AuthParams, Github, JsonSupport}
+import com.kubukoz.trellocat.domain.{Github, GithubToken, JsonSupport}
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 
 import scala.concurrent.duration._
@@ -16,8 +15,6 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
     val boardName = "Project 1"
     val repo = Repo("some-repo")
     val user = User("some-user")
-
-    val ap = AuthParams(Query("access_token" -> "some-token"))
 
     val githubApiRoutes = {
       import Directives._
@@ -37,7 +34,9 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     implicit val client = new MockApiClient(githubApiRoutes)
 
-    val ghService = new RealGithubService(ap)
+    implicit val token = GithubToken("some-token")
+
+    val ghService = new RealGithubService()
 
     implicit val timeout = Timeout(3.seconds)
     ghService.createProject(user, repo, ProjectStub(boardName)).futureValue(timeout) shouldBe Github.Project(projectId, boardName, 1)
@@ -48,8 +47,6 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
     val repo = Repo("nope-nope")
     val userName = "some-user"
     val user = User(userName)
-
-    implicit val ap = AuthParams(Query("access_token" -> "token"))
 
     val githubApiRoutes = {
       import Directives._
@@ -65,7 +62,9 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     implicit val client = new MockApiClient(githubApiRoutes)
 
-    val ghService = new RealGithubService(ap)
+    implicit val token = GithubToken("token")
+
+    val ghService = new RealGithubService()
 
     implicit val timeout = Timeout(1.second)
 
@@ -77,8 +76,6 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
     val repo = Repo("some-repo")
     val user = User("some-user")
     val column = Column(columnName, 1)
-
-    val ap = AuthParams(Query("access_token" -> "some-token"))
 
     val githubApiRoutes = {
       import Directives._
@@ -97,7 +94,9 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     implicit val client = new MockApiClient(githubApiRoutes)
 
-    val ghService = new RealGithubService(ap)
+    implicit val token = GithubToken("some-token")
+
+    val ghService = new RealGithubService()
 
     ghService.createColumn(user, Project(1, "my-project", 1), repo, ColumnStub(columnName)).futureValue shouldBe column
   }
@@ -116,8 +115,9 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     implicit val client = new MockApiClient(githubApiRoutes)
 
-    val ap = AuthParams(Query("access_token" -> "some-token"))
-    val ghService = new RealGithubService(ap)
+    implicit val token = GithubToken("some-token")
+
+    val ghService = new RealGithubService()
 
     ghService.createColumn(user, Project(2, "my-project", 2), repo, ColumnStub(columnName)).failed.futureValue.getMessage shouldBe "Request was rejected"
   }
@@ -137,8 +137,9 @@ class RealGithubServiceTests extends BaseSpec with JsonSupport {
 
     implicit val client = new MockApiClient(githubApiRoutes)
 
-    val ap = AuthParams(Query("access_token" -> "some-token"))
-    val ghService = new RealGithubService(ap)
+    implicit val token = GithubToken("some-token")
+
+    val ghService = new RealGithubService()
     ghService.allRepos.futureValue shouldBe List(Repo("hello"), Repo("world"))
   }
 }

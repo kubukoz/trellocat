@@ -6,7 +6,7 @@ import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import akka.http.scaladsl.unmarshalling.{FromResponseUnmarshaller, Unmarshal}
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.Materializer
-import com.kubukoz.trellocat.domain.AuthParams
+import com.kubukoz.trellocat.domain.{AccessToken, AuthParams}
 import com.kubukoz.trellocat.util.StatusCodeException
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,8 +42,8 @@ object ApiClient {
   /**
     * Simplifies adding the auth parameters to a URI's query string.
     **/
-  implicit class AuthenticatedUri(uri: Uri)(implicit authParams: AuthParams) {
-    def withAuthQuery(query: Query): Uri = uri.withQuery(Query(authParams.authQuery ++ query: _*))
+  implicit class AuthenticatedUri(uri: Uri)(implicit authParams: AuthParams, token: AccessToken) {
+    def withAuthQuery(query: Query): Uri = uri.withQuery(Query(token.authQuery ++ authParams.authQuery ++ query: _*))
   }
 
 }

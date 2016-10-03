@@ -2,12 +2,10 @@ package com.kubukoz.trellocat
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.Uri.Query
 import akka.stream.ActorMaterializer
 import com.kubukoz.trellocat.api.RealApiClient
 import com.kubukoz.trellocat.config.{GithubConfig, TrelloConfig}
-import com.kubukoz.trellocat.domain.AuthParams
-import com.kubukoz.trellocat.service.{GithubService, RealGithubService, RealTrelloService, TrelloService}
+import com.kubukoz.trellocat.service._
 import com.typesafe.config.ConfigFactory
 import configs.Configs
 
@@ -24,11 +22,9 @@ object Main extends Routes {
   val trelloConfig = Configs[TrelloConfig].get(config, "trello").value
   val githubConfig = Configs[GithubConfig].get(config, "github").value
 
-  val trelloAuthParams = AuthParams(Query("key" -> trelloConfig.apiKey, "token" -> trelloConfig.apiToken))
-  val githubAuthParams = AuthParams(Query("access_token" -> githubConfig.apiToken))
+  val trelloService = new RealTrelloService(trelloConfig)
 
-  override val trelloService: TrelloService = new RealTrelloService(trelloAuthParams)
-  override val githubService: GithubService = new RealGithubService(githubAuthParams)
+  val githubService = new RealGithubService()
 
   def main(args: Array[String]): Unit = {
     val server = http.bindAndHandle(routes, "localhost", 8080)
