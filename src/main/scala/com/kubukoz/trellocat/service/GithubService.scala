@@ -51,7 +51,7 @@ trait GithubService {
 class RealGithubService(implicit api: ApiClient, mat: Materializer)
   extends GithubService with JsonSupport with GithubConstants with AkkaHttpUtils {
 
-  implicit val authParams = NoParams
+  implicit val authParams = AuthParams.NoParams
 
   override def createProject(user: User, repo: Repo, projectStub: ProjectStub)
                             (implicit token: GithubToken, ec: ExecutionContext): Future[Project] = {
